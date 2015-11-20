@@ -7,8 +7,9 @@
 //
 
 import Foundation
+import UIKit
 
-public class banana {
+public class banana : UIViewController, UIScrollViewDelegate {
     
     var imagePageControl: UIPageControl?
     var imageScrollView: UIScrollView!
@@ -19,23 +20,35 @@ public class banana {
     public var autoScrollTime : Double = 8
     public var imagesToLoadInMemory = 4
     
-    public init (imagesArrayInput : [String], imageScrollView : UIScrollView, imagePageControl : UIPageControl? = nil){
+    public convenience init ( imageScrollView : UIScrollView, imagePageControl : UIPageControl? = nil){
+        self.init()
         self.imageScrollView = imageScrollView
+        self.imageScrollView.delegate = self
         self.imagePageControl = imagePageControl
-        self.getScrollViewImages(imagesArrayInput)
+        
     }
+
+//    required public init?(coder aDecoder: NSCoder) {
+//        fatalError("init(coder:) has not been implemented")
+//    }
     
-    public init (imagesArrayInput : [UIImage], imageScrollView : UIScrollView, imagePageControl : UIPageControl? = nil){
-        self.imageScrollView = imageScrollView
-        self.imagePageControl = imagePageControl
-        self.getScrollViewImages(imagesArrayInput)
-    }
-    
-    public func load(){
+    @nonobjc public func load(imagesArrayInput : [String]){
         let priority = DISPATCH_QUEUE_PRIORITY_DEFAULT
         dispatch_async(dispatch_get_global_queue(priority, 0)) {
             // do some task
-            
+            self.getScrollViewImages(imagesArrayInput)
+            dispatch_async(dispatch_get_main_queue()) {
+                // update some UI
+                self.loadScrollViewImages()
+            }
+        }
+    }
+    
+    @nonobjc public func load(imagesArrayInput : [UIImage]){
+        let priority = DISPATCH_QUEUE_PRIORITY_DEFAULT
+        dispatch_async(dispatch_get_global_queue(priority, 0)) {
+            // do some task
+            self.getScrollViewImages(imagesArrayInput)
             dispatch_async(dispatch_get_main_queue()) {
                 // update some UI
                 self.loadScrollViewImages()
@@ -53,7 +66,7 @@ public class banana {
     
     
     
-    func getScrollViewImages(imagesArray : [String]){
+    @nonobjc func getScrollViewImages(imagesArray : [String]){
         for image in imagesArray {
             if let url = NSURL(string: image) {
                 if let data = NSData(contentsOfURL: url){
@@ -63,7 +76,7 @@ public class banana {
         }
     }
     
-    func getScrollViewImages(imagesArray : [UIImage]){
+    @nonobjc func getScrollViewImages(imagesArray : [UIImage]){
         for image in imagesArray {
             pageImages.append(image)
         }
@@ -142,7 +155,7 @@ public class banana {
         }
         // Update the page control
         if imagePageControl != nil {
-            imagePageControl!.currentPage = page + 1
+            imagePageControl!.currentPage = page
         }
         
         // Work out which pages you want to load
@@ -181,9 +194,6 @@ public class banana {
             slideToX = 0
         }
         self.imageScrollView.scrollRectToVisible(CGRectMake(slideToX, 0, pageWidth, CGRectGetHeight(self.imageScrollView.frame)), animated: true)
-        if self.imagesLoaded == true {
-            loadVisiblePages()
-        }
     }
     
     public func assignTouchGesture(){
@@ -222,4 +232,17 @@ public class banana {
             loadVisiblePages()
         }
     }
+    
+    @objc public func scrollViewDidEndDecelerating(scrollView: UIScrollView) {
+        if self.imagesLoaded == true {
+            loadVisiblePages()
+        }
+    }
+    
+    @objc public func scrollViewDidEndScrollingAnimation(scrollView: UIScrollView) {
+        if self.imagesLoaded == true {
+            loadVisiblePages()
+        }
+    }
+
 }

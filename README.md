@@ -18,9 +18,9 @@ var imageArray = [String]()
 //or imageArray can be a array of UIImages
 var imageArray = [UIImage]()
 
-var imageScroll = banana( imagesArrayInput : imageArray, imageScrollView :self.imageScrollView )
+var imageScroll = banana( imageScrollView :self.imageScrollView )
 //Load to load images in memory and display them in User Interface
-imageScroll!.load()
+imageScroll!.load(imageArray)
 
 //Call startScroll for autoScrolling. Default scrolling timer is 8 seconds
 imageScroll!.startScroll()
@@ -68,10 +68,10 @@ Setting AutoScroll Delay and Caching threshold
 --------------------------
 
 ```swift
-var imageScroll = banana( imagesArrayInput : imageArray, imageScrollView :self.imageScrollView )
+var imageScroll = banana( imageScrollView :self.imageScrollView )
 imageScroll.autoScrollTime = 2 // < Any integer value in seconds >
 
-//banana library doesn't load all images at once in memory, but only some images (one in display and one or two before and after are loaded). Images are loaded and unloaded dynamically. Though in case you might see empty images while scrolling, try increasing the threshold value. Default is 4
+//banana library doesn't load all images at once in memory, but only some images (one in display and one or two before and after are loaded). Images are loaded and unloaded dynamically. Default is 4
 imageScoll.imagesToLoadInMemory = 10
 ```
 
@@ -79,15 +79,16 @@ imageScoll.imagesToLoadInMemory = 10
 
 #### Advanced
 
+```swift
 //You can also assign a UIPageControl.
 @IBOutlet weak var imageScrollView: UIScrollView!
 @IBOutlet weak var imagePageControl: UIPageControl!
 
-var imageScroll = banana( imagesArrayInput : imageArray, imageScrollView :self.imageScrollView, imagePageControl : self.imagePageControl )
-self.imageScroll!.load()
+var imageScroll = banana( imageScrollView :self.imageScrollView, imagePageControl : self.imagePageControl )
+self.imageScroll!.load(imageArray)
 self.imageScroll!.startScroll()
 self.imageScroll!.assignTouchGesture()
-
+```
 
 Screenshots
 -----------
@@ -98,4 +99,4 @@ Screenshots
 License
 -------
 
-banana is under [WTFPL](http://www.wtfpl.net/). You can do what the fuck you want with banana. See [LICENSE](LICENSE) file for more info.
+banana is released under the MIT license. See [LICENSE](LICENSE) file for more info.
