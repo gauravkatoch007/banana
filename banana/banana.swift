@@ -15,7 +15,7 @@ public class banana : UIViewController, UIScrollViewDelegate {
     var imageScrollView: UIScrollView!
     var pageImages: [UIImage] = []
     var pageViews: [UIImageView?] = []
-    var timer : NSTimer = NSTimer()
+    var timer : Timer = Timer()
     var imagesLoaded = false
     public var autoScrollTime : Double = 8
     public var imagesToLoadInMemory = 4
@@ -33,23 +33,22 @@ public class banana : UIViewController, UIScrollViewDelegate {
 //    }
     
     @nonobjc public func load(imagesArrayInput : [String]){
-        let priority = DISPATCH_QUEUE_PRIORITY_DEFAULT
-        dispatch_async(dispatch_get_global_queue(priority, 0)) {
+        let priority = DispatchQueue.GlobalQueuePriority.default
+        DispatchQueue.global(priority: priority).async() {
             // do some task
-            self.getScrollViewImages(imagesArrayInput)
-            dispatch_async(dispatch_get_main_queue()) {
-                // update some UI
+            self.getScrollViewImages(imagesArray: imagesArrayInput)
+            DispatchQueue.main.async {
                 self.loadScrollViewImages()
             }
         }
     }
     
     @nonobjc public func load(imagesArrayInput : [UIImage]){
-        let priority = DISPATCH_QUEUE_PRIORITY_DEFAULT
-        dispatch_async(dispatch_get_global_queue(priority, 0)) {
+        let priority = DispatchQueue.GlobalQueuePriority.default
+        DispatchQueue.global(priority: priority).async() {
             // do some task
-            self.getScrollViewImages(imagesArrayInput)
-            dispatch_async(dispatch_get_main_queue()) {
+            self.getScrollViewImages(imagesArray: imagesArrayInput)
+            DispatchQueue.main.async {
                 // update some UI
                 self.loadScrollViewImages()
             }
@@ -57,7 +56,7 @@ public class banana : UIViewController, UIScrollViewDelegate {
     }
     
     public func startScroll(){
-        timer = NSTimer.scheduledTimerWithTimeInterval(autoScrollTime, target: self, selector: "autoScrollImage", userInfo: nil, repeats: true)
+        timer = Timer.scheduledTimer(timeInterval: autoScrollTime, target: self, selector: "autoScrollImage", userInfo: nil, repeats: true)
     }
     
     public func stopScroll(){
@@ -69,8 +68,8 @@ public class banana : UIViewController, UIScrollViewDelegate {
     @nonobjc func getScrollViewImages(imagesArray : [String]){
         for image in imagesArray {
             if let url = NSURL(string: image) {
-                if let data = NSData(contentsOfURL: url){
-                    pageImages.append(UIImage(data: data)!)
+                if let data = NSData(contentsOf: url as URL){
+                    pageImages.append(UIImage(data: data as Data)!)
                 }
             }
         }
@@ -124,7 +123,7 @@ public class banana : UIViewController, UIScrollViewDelegate {
             
             // 3
             let newPageView = UIImageView(image: pageImages[page])
-            newPageView.contentMode = .ScaleAspectFit
+            newPageView.contentMode = .scaleAspectFit
             newPageView.frame = frame
             imageScrollView.addSubview(newPageView)
             
@@ -166,25 +165,27 @@ public class banana : UIViewController, UIScrollViewDelegate {
         print("Last Page ="+String(lastPage))
         
         // Purge anything before the first page
-        for var index = 0; index < firstPage; ++index {
-            purgePage(index)
+        for var index in 0 ..< firstPage {
+            purgePage(page: index)
+            index += 1
         }
         
         // Load pages in our range
         for index in firstPage...lastPage {
-            loadPage(index)
+            loadPage(page: index)
         }
         
         // Purge anything after the last page
-        for var index = lastPage+1; index < pageImages.count; ++index {
-            purgePage(index)
+        for var index in lastPage+1 ..< pageImages.count {
+            purgePage(page: index)
+            index += 1
         }
     }
     
     
     @objc public func autoScrollImage (){
         
-        let pageWidth:CGFloat = CGRectGetWidth(self.imageScrollView.frame)
+        let pageWidth:CGFloat = self.imageScrollView.frame.width
         let maxWidth:CGFloat = pageWidth * CGFloat(pageImages.count)
         let contentOffset:CGFloat = self.imageScrollView.contentOffset.x
         
@@ -193,7 +194,8 @@ public class banana : UIViewController, UIScrollViewDelegate {
         if  contentOffset + pageWidth == maxWidth{
             slideToX = 0
         }
-        self.imageScrollView.scrollRectToVisible(CGRectMake(slideToX, 0, pageWidth, CGRectGetHeight(self.imageScrollView.frame)), animated: true)
+        
+        self.imageScrollView.scrollRectToVisible(CGRect(x: slideToX, y: 0, width: pageWidth, height: self.imageScrollView.frame.height), animated: true)
     }
     
     public func assignTouchGesture(){
@@ -204,19 +206,19 @@ public class banana : UIViewController, UIScrollViewDelegate {
         self.imageScrollView.addGestureRecognizer(tapRecognizer)
         
         let swipeRight = UISwipeGestureRecognizer(target: self, action: "respondToSwipeGesture:")
-        swipeRight.direction = UISwipeGestureRecognizerDirection.Right
+        swipeRight.direction = UISwipeGestureRecognizer.Direction.right
         self.imageScrollView.addGestureRecognizer(swipeRight)
         
         let swipeLeft = UISwipeGestureRecognizer(target: self, action: "respondToSwipeGesture:")
-        swipeLeft.direction = UISwipeGestureRecognizerDirection.Left
+        swipeLeft.direction = UISwipeGestureRecognizer.Direction.left
         self.imageScrollView.addGestureRecognizer(swipeLeft)
         
         let swipeUp = UISwipeGestureRecognizer(target: self, action: "respondToSwipeGesture:")
-        swipeUp.direction = UISwipeGestureRecognizerDirection.Up
+        swipeUp.direction = UISwipeGestureRecognizer.Direction.up
         self.imageScrollView.addGestureRecognizer(swipeUp)
         
         let swipeDown = UISwipeGestureRecognizer(target: self, action: "respondToSwipeGesture:")
-        swipeDown.direction = UISwipeGestureRecognizerDirection.Down
+        swipeDown.direction = UISwipeGestureRecognizer.Direction.down
         self.imageScrollView.addGestureRecognizer(swipeDown)
     }
     @objc public func scrollViewTapped(recognizer: UITapGestureRecognizer){
